@@ -1,9 +1,26 @@
-<!DOCTYPE html>
+ฟ<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าเกม RoV อัตโนมัติ</title>
+    
+    <title>เข้าหน้าแลกโค้ดเกม RoV อัตโนมัติ | โค้ดี้ by nattapat2871</title>
+    <meta name="description" content="ระบบช่วยคัดลอกและพาเข้าหน้าแลกโค้ดเกม RoV (Arena of Valor) แบบอัตโนมัติ รวดเร็ว ปลอดภัย ไม่มีการเก็บข้อมูลผู้ใช้ใดๆ ทั้งสิ้น">
+    <meta name="keywords" content="RoV, โค้ด RoV, แลกโค้ด, Arena of Valor, โค้ดแจกฟรี, โค้ดี้, nattapat2871">
+    <meta name="author" content="nattapat2871">
+    <meta name="theme-color" content="#3b82f6">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nattapat2871.me/RoV-redeem-page/">
+    <meta property="og:title" content="เข้าหน้าแลกโค้ดเกม RoV อัตโนมัติ 🎁">
+    <meta property="og:description" content="ระบบช่วยคัดลอกและพาเข้าหน้าแลกโค้ดเกม RoV (Arena of Valor) แบบอัตโนมัติ รวดเร็ว ปลอดภัย ไม่เก็บข้อมูลผู้ใช้">
+    <meta property="og:image" content="https://cdn.discordapp.com/attachments/1481312839678427227/1481318831128317962/fWAs7pgAaEwNk5gGF0sOsdO-dKUmxm94wEeGbXEF7fsmcnEOTqqkJtqvFEDwk3w_F3wiFDlr9-eX5DtLK1GJCw.png">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nattapat2871.me/RoV-redeem-page/">
+    <meta property="twitter:title" content="เข้าหน้าแลกโค้ดเกม RoV อัตโนมัติ 🎁">
+    <meta property="twitter:description" content="ระบบช่วยคัดลอกและพาเข้าหน้าแลกโค้ดเกม RoV แบบอัตโนมัติ รวดเร็ว ปลอดภัย">
+    <meta property="twitter:image" content="https://cdn.discordapp.com/attachments/1481312839678427227/1481318831128317962/fWAs7pgAaEwNk5gGF0sOsdO-dKUmxm94wEeGbXEF7fsmcnEOTqqkJtqvFEDwk3w_F3wiFDlr9-eX5DtLK1GJCw.png">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -134,12 +151,10 @@
 
         // ================== API CONFIG ==================
         const API_BASE = "https://ame-api.nattapat2871.me/api";
-        const SITE_NAME = "rov-redeem-page"; // ใช้ชื่อนี้รวบยอดข้อมูลทุกโค้ดไว้ด้วยกัน
+        const SITE_NAME = "rov-redeem-page"; 
         
-        // เช็คว่าเคยกดไลก์ไปแล้วหรือยังจาก LocalStorage ของมือถือ
         let isLiked = localStorage.getItem(`liked_${SITE_NAME}`) === "true";
 
-        // 1. ฟังก์ชันโหลดสถิติ (ดึงข้อมูลตอนเปิดเว็บ)
         function loadStats() {
             fetch(`${API_BASE}/page-stats?site=${SITE_NAME}`)
                 .then(res => res.json())
@@ -149,49 +164,40 @@
                 })
                 .catch(err => console.error("ดึงสถิติไม่สำเร็จ:", err));
 
-            // อัปเดต UI หัวใจถ้าเคยกดไลก์ไว้แล้ว
             if (isLiked) {
                 document.getElementById('likeWidget').classList.add('liked');
             }
         }
 
-        // 2. ฟังก์ชันกดถูกใจ (บวก/ลบ ยอดใจ)
         function toggleLike() {
             const likeWidget = document.getElementById('likeWidget');
             const likeText = document.getElementById('likeCount');
             let currentLikes = parseInt(likeText.innerText) || 0;
 
             if (isLiked) {
-                // กรณีกดซ้ำเพื่อ "ยกเลิกไลก์"
                 isLiked = false;
                 currentLikes = Math.max(0, currentLikes - 1);
                 likeWidget.classList.remove('liked');
                 localStorage.setItem(`liked_${SITE_NAME}`, "false");
                 fetch(`${API_BASE}/like?site=${SITE_NAME}&action=unlike`, { method: 'POST' }).catch(e=>{});
             } else {
-                // กรณี "กดไลก์"
                 isLiked = true;
                 currentLikes += 1;
                 likeWidget.classList.add('liked');
                 localStorage.setItem(`liked_${SITE_NAME}`, "true");
                 fetch(`${API_BASE}/like?site=${SITE_NAME}&action=like`, { method: 'POST' }).catch(e=>{});
             }
-            likeText.innerText = currentLikes; // อัปเดตเลขทันทีให้ผู้ใช้เห็นว่ากดติด
+            likeText.innerText = currentLikes;
         }
 
-        // 3. ฟังก์ชันบวกยอดวิว (เรียกเมื่อกดปุ่มเข้าเกม)
         function countViewAndJump() {
-            // ยิง API เพิ่มยอดวิวแบบไม่รอ (Fire and Forget) จะได้ไม่รบกวนการเด้งเกม
             fetch(`${API_BASE}/view?site=${SITE_NAME}`, { method: 'POST' }).catch(e=>{});
-            
-            // รอแป๊บเดียวแล้วเด้งเข้าเกมเลย
             setTimeout(() => {
                 let payload = { ContentUrl: "", actions: [{ name: "OpenUrlInGame", Url: "https://redeem.rov.in.th/" }] };
                 let encodedPayload = encodeURIComponent(JSON.stringify(payload));
                 window.location.href = `ngame1138://deeplink?type=common&dest=${encodedPayload}`;
             }, 300);
         }
-        // ===============================================
 
         function fallbackCopyTextToClipboard(text) {
             var textArea = document.createElement("textarea");
@@ -214,7 +220,7 @@
                 text.innerText = "คัดลอกแล้ว!";
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(codeToRedeem).then(function() {
-                        countViewAndJump(); // เด้งไปนับวิวแล้วเข้าเกม
+                        countViewAndJump();
                     }).catch(function() {
                         fallbackCopyTextToClipboard(codeToRedeem);
                         countViewAndJump();
@@ -225,12 +231,12 @@
                 }
             } else {
                 text.innerText = "กำลังเข้าสู่เกม...";
-                countViewAndJump(); // เด้งไปนับวิวแล้วเข้าเกม
+                countViewAndJump(); 
             }
         }
 
         window.onload = function() {
-            loadStats(); // โหลดสถิติจาก Ame API ทันทีที่เปิดเว็บ
+            loadStats(); 
 
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             if (!isMobile) {
