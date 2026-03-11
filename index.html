@@ -27,13 +27,17 @@
         .title { font-size: 22px; font-weight: 600; margin-bottom: 12px; background: linear-gradient(90deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .subtitle { color: #94a3b8; font-size: 15px; font-weight: 300; line-height: 1.6; margin-bottom: 20px; }
         
-        .code-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 18px; color: #a78bfa; margin-bottom: 25px; letter-spacing: 2px; display: none; }
+        .code-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 20px; color: #a78bfa; margin-bottom: 25px; letter-spacing: 2px; font-weight: bold; display: none; border: 1px dashed rgba(167, 139, 250, 0.5); }
 
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; text-decoration: none; font-weight: 500; font-size: 16px; font-family: 'Kanit', sans-serif; border-radius: 14px; border: none; cursor: pointer; transition: all 0.3s; width: 100%; box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.5); }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -10px rgba(139, 92, 246, 0.7); }
+        .btn:active { transform: scale(0.95); } /* เพิ่มเอฟเฟกต์ตอนกดให้ดูมีมิติ */
 
         .footer { margin-top: 25px; font-size: 13px; color: #64748b; font-weight: 300; }
         .footer a { color: #60a5fa; text-decoration: none; font-weight: 500; }
+        
+        /* เปลี่ยนสีปุ่มตอนกดสำเร็จ */
+        .btn.success { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.5); }
     </style>
 </head>
 <body>
@@ -53,8 +57,8 @@
         <div class="code-box" id="codeDisplay"></div>
         
         <button class="btn" id="actionBtn" onclick="openROV()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            คัดลอกโค้ดและเข้าเกม
+            <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span id="btnText">คัดลอกโค้ดและเข้าเกม</span>
         </button>
 
         <div class="footer">
@@ -62,24 +66,12 @@
         </div>
     </div>
 
-    <input type="text" id="hiddenCopyText" style="position: absolute; left: -9999px;">
-
     <script>
-        // ดึงโค้ดจากลิงก์
         const urlParams = new URLSearchParams(window.location.search);
         const codeToRedeem = urlParams.get('code');
 
-        function openROV() {
-            // 1. สร้างคำสั่งคัดลอกโค้ดลงมือถือ
-            if (codeToRedeem) {
-                let copyText = document.getElementById("hiddenCopyText");
-                copyText.value = codeToRedeem;
-                copyText.select();
-                copyText.setSelectionRange(0, 99999); // สำหรับมือถือ
-                document.execCommand("copy");
-            }
-
-            // 2. เด้งเข้าเกมหน้า official Garena เสมอ
+        // ฟังก์ชันสั่งเด้งเข้าเกม
+        function jumpToGame() {
             let payload = {
                 ContentUrl: "",
                 actions: [{
@@ -87,9 +79,56 @@
                     Url: "https://redeem.rov.in.th/" 
                 }]
             };
-
             let encodedPayload = encodeURIComponent(JSON.stringify(payload));
             window.location.href = `ngame1138://deeplink?type=common&dest=${encodedPayload}`;
+        }
+
+        // ฟังก์ชัน Copy แบบสำรองเผื่อมือถือรุ่นเก่า
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        }
+
+        function openROV() {
+            let btn = document.getElementById('actionBtn');
+            let icon = document.getElementById('btnIcon');
+            let text = document.getElementById('btnText');
+
+            // เปลี่ยนหน้าตาปุ่มเป็นติ๊กถูกสีเขียวชั่วคราว
+            btn.classList.add('success');
+            text.innerText = "คัดลอกแล้ว!";
+            icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+            if (codeToRedeem) {
+                // ใช้เทคโนโลยี Clipboard API ตัวใหม่ล่าสุด
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(codeToRedeem).then(function() {
+                        // คัดลอกเสร็จปุ๊บ รอ 0.4 วินาทีแล้วค่อยเด้งเข้าเกม (กันมือถือเอ๋อ)
+                        setTimeout(jumpToGame, 400);
+                    }).catch(function() {
+                        // ถ้าติด Error ให้ใช้วิธีสำรอง
+                        fallbackCopyTextToClipboard(codeToRedeem);
+                        setTimeout(jumpToGame, 400);
+                    });
+                } else {
+                    fallbackCopyTextToClipboard(codeToRedeem);
+                    setTimeout(jumpToGame, 400);
+                }
+            } else {
+                // ถ้าไม่มีโค้ดแนบมาด้วย ก็ให้เด้งเข้าเกมเลย
+                setTimeout(jumpToGame, 400);
+            }
         }
 
         window.onload = function() {
@@ -108,9 +147,6 @@
                     codeBox.innerText = codeToRedeem;
                     codeBox.style.display = 'block';
                 }
-                
-                // สำหรับมือถือ ระบบความปลอดภัยเบราว์เซอร์บางรุ่นบังคับให้ต้อง "กดปุ่ม" ถึงจะ Copy ได้
-                // เราเลยไม่ใส่ setTimeout เด้งออโต้แล้ว แต่ให้เขากดปุ่มสีม่วงๆ 1 ที เพื่อให้มัน Copy + เด้งเข้าเกมแบบสมบูรณ์
             }
         };
     </script>
