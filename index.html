@@ -1,0 +1,39 @@
+<script>
+        function getOpenInGameDeeplink() {
+            // 1. ดึงค่าโค้ดจาก URL เว็บเรา (เช่น ?code=XXXXX)
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            // 2. กำหนดปลายทาง ถ้ามีโค้ดก็แปะท้ายไปด้วย
+            let targetUrl = "https://redeem.rov.in.th/";
+            if (code) {
+                targetUrl += "?code=" + code;
+            }
+
+            // 3. สร้าง Payload
+            let payload = {
+                ContentUrl: "",
+                actions: [{
+                    name: "OpenUrlInGame",
+                    Url: targetUrl 
+                }]
+            };
+
+            let encodedPayload = encodeURIComponent(JSON.stringify(payload));
+            return `ngame1138://deeplink?type=common&dest=${encodedPayload}`;
+        }
+
+        function openROV() {
+            let finalLink = getOpenInGameDeeplink();
+            window.location.href = finalLink;
+        }
+
+        window.onload = function() {
+            // ถ้าระบุโค้ดมา เปลี่ยนข้อความนิดหน่อยให้ดูสมาร์ทขึ้น
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('code')) {
+                document.querySelector('.title').innerText = "กำลังพาไปเติมโค้ด: " + urlParams.get('code');
+            }
+            setTimeout(openROV, 1500);
+        };
+    </script>
