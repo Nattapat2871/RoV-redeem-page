@@ -1,16 +1,176 @@
-<script>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าเกม RoV อัตโนมัติ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, var(--bg-dark) 100%);
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 40px 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255,255,255,0.02);
+            max-width: 400px;
+            width: 85%;
+            animation: slideUpFade 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .spinner-wrapper {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 25px auto;
+        }
+
+        .spinner-ring-1, .spinner-ring-2 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+
+        .spinner-ring-1 {
+            border-top-color: var(--primary);
+            border-bottom-color: var(--secondary);
+            animation: spin1 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        .spinner-ring-2 {
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border-left-color: var(--secondary);
+            border-right-color: var(--primary);
+            animation: spin2 2s linear infinite reverse;
+        }
+
+        @keyframes spin1 { 100% { transform: rotate(360deg); } }
+        @keyframes spin2 { 100% { transform: rotate(360deg); } }
+
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 15px;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            font-family: 'Kanit', sans-serif;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px rgba(139, 92, 246, 0.7);
+        }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 300;
+        }
+
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainCard">
+        <div class="spinner-wrapper" id="spinner">
+            <div class="spinner-ring-1"></div>
+            <div class="spinner-ring-2"></div>
+        </div>
+        
+        <div class="title" id="mainTitle">กำลังพาเข้าหน้าแลกโค้ดเกม RoV</div>
+        <div class="subtitle" id="mainSubtitle">
+            ระบบจะเปิดหน้าแลกโค้ดในเกมอัตโนมัติ<br>
+            โดยไม่เก็บข้อมูลใดๆ ทั้งสิ้น
+        </div>
+        
+        <button class="btn" id="actionBtn" onclick="openROV()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="10" y1="11" y2="11"></line><line x1="8" x2="8" y1="9" y2="13"></line><line x1="15" x2="15.01" y1="12" y2="12"></line><line x1="18" x2="18.01" y1="10" y2="10"></line><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"></path></svg>
+            เด้งเข้าเกมหน้าเติมโค้ด
+        </button>
+
+        <div class="footer">
+            พัฒนาโดย <a href="https://nattapat2871.me" target="_blank">nattapat2871</a>
+        </div>
+    </div>
+
+    <script>
         function getOpenInGameDeeplink() {
-            // 1. ดึงค่าโค้ดจาก URL เว็บเรา (เช่น ?code=XXXXX)
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
 
-            // 2. กำหนดปลายทาง ถ้ามีโค้ดก็แปะท้ายไปด้วย
             let targetUrl = "https://redeem.rov.in.th/";
             if (code) {
                 targetUrl += "?code=" + code;
             }
 
-            // 3. สร้าง Payload
             let payload = {
                 ContentUrl: "",
                 actions: [{
@@ -29,11 +189,25 @@
         }
 
         window.onload = function() {
-            // ถ้าระบุโค้ดมา เปลี่ยนข้อความนิดหน่อยให้ดูสมาร์ทขึ้น
+            // ดักจับว่าเปิดบนมือถือหรือคอมพิวเตอร์
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('code')) {
-                document.querySelector('.title').innerText = "กำลังพาไปเติมโค้ด: " + urlParams.get('code');
+            
+            if (!isMobile) {
+                // ถ้าเปิดในคอม ให้ขึ้นข้อความแจ้งเตือนและซ่อนวงกลมโหลด
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('actionBtn').style.display = 'none';
+                document.getElementById('mainTitle').innerText = "🚫 กรุณาเปิดลิงก์นี้บนมือถือ";
+                document.getElementById('mainSubtitle').innerHTML = "ระบบเติมโค้ดอัตโนมัติรองรับเฉพาะ<br>สมาร์ทโฟนที่มีเกม RoV ติดตั้งอยู่เท่านั้นครับ";
+            } else {
+                // ถ้าเปิดในมือถือ ให้ทำงานปกติ
+                if(urlParams.get('code')) {
+                    document.getElementById('mainTitle').innerText = "เตรียมเติมโค้ด: " + urlParams.get('code');
+                }
+                setTimeout(openROV, 1500);
             }
-            setTimeout(openROV, 1500);
         };
     </script>
+
+</body>
+</html>
