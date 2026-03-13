@@ -145,119 +145,153 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const codeToRedeem = urlParams.get('code');
+    // 1. ดึงพารามิเตอร์ 'code' จาก URL (เช่น ?code=ABC12345)
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeToRedeem = urlParams.get('code');
 
-        const API_BASE = "https://ame-api.nattapat2871.me/api";
-        const SITE_NAME = "rov-redeem-page"; 
+    const API_BASE = "https://ame-api.nattapat2871.me/api";
+    const SITE_NAME = "rov-redeem-page"; 
+    
+    let isLiked = localStorage.getItem(`liked_${SITE_NAME}`) === "true";
+
+    // ฟังก์ชันดึงสถิติยอดวิวและยอดไลก์
+    function loadStats() {
+        fetch(`${API_BASE}/page-stats?site=${SITE_NAME}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('viewCount').innerText = data.view_count || 0;
+                document.getElementById('likeCount').innerText = data.like_count || 0;
+            })
+            .catch(err => console.error("ดึงสถิติไม่สำเร็จ:", err));
+
+        if (isLiked) {
+            document.getElementById('likeWidget').classList.add('liked');
+        }
+    }
+
+    // ฟังก์ชันกดไลก์/ยกเลิกไลก์
+    function toggleLike() {
+        const likeWidget = document.getElementById('likeWidget');
+        const likeText = document.getElementById('likeCount');
+        let currentLikes = parseInt(likeText.innerText) || 0;
+
+        if (isLiked) {
+            isLiked = false;
+            currentLikes = Math.max(0, currentLikes - 1);
+            likeWidget.classList.remove('liked');
+            localStorage.setItem(`liked_${SITE_NAME}`, "false");
+            fetch(`${API_BASE}/like?site=${SITE_NAME}&action=unlike`, { method: 'POST' }).catch(e=>{});
+        } else {
+            isLiked = true;
+            currentLikes += 1;
+            likeWidget.classList.add('liked');
+            localStorage.setItem(`liked_${SITE_NAME}`, "true");
+            fetch(`${API_BASE}/like?site=${SITE_NAME}&action=like`, { method: 'POST' }).catch(e=>{});
+        }
+        likeText.innerText = currentLikes;
+    }
+
+    // --- ฟังก์ชันไฮไลท์: นับวิวและกระโดดเข้าเกมแบบ Auto-Fill ---
+    function countViewAndJump() {
+        // บันทึกสถิติการเข้าชม
+        fetch(`${API_BASE}/view?site=${SITE_NAME}`, { method: 'POST' }).catch(e=>{});
         
-        let isLiked = localStorage.getItem(`liked_${SITE_NAME}`) === "true";
-
-        function loadStats() {
-            fetch(`${API_BASE}/page-stats?site=${SITE_NAME}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('viewCount').innerText = data.view_count || 0;
-                    document.getElementById('likeCount').innerText = data.like_count || 0;
-                })
-                .catch(err => console.error("ดึงสถิติไม่สำเร็จ:", err));
-
-            if (isLiked) {
-                document.getElementById('likeWidget').classList.add('liked');
-            }
-        }
-
-        function toggleLike() {
-            const likeWidget = document.getElementById('likeWidget');
-            const likeText = document.getElementById('likeCount');
-            let currentLikes = parseInt(likeText.innerText) || 0;
-
-            if (isLiked) {
-                isLiked = false;
-                currentLikes = Math.max(0, currentLikes - 1);
-                likeWidget.classList.remove('liked');
-                localStorage.setItem(`liked_${SITE_NAME}`, "false");
-                fetch(`${API_BASE}/like?site=${SITE_NAME}&action=unlike`, { method: 'POST' }).catch(e=>{});
-            } else {
-                isLiked = true;
-                currentLikes += 1;
-                likeWidget.classList.add('liked');
-                localStorage.setItem(`liked_${SITE_NAME}`, "true");
-                fetch(`${API_BASE}/like?site=${SITE_NAME}&action=like`, { method: 'POST' }).catch(e=>{});
-            }
-            likeText.innerText = currentLikes;
-        }
-
-        function countViewAndJump() {
-            fetch(`${API_BASE}/view?site=${SITE_NAME}`, { method: 'POST' }).catch(e=>{});
-            setTimeout(() => {
-                let payload = { ContentUrl: "", actions: [{ name: "OpenUrlInGame", Url: "https://redeem.rov.in.th/" }] };
-                let encodedPayload = encodeURIComponent(JSON.stringify(payload));
-                window.location.href = `ngame1138://deeplink?type=common&dest=${encodedPayload}`;
-            }, 300);
-        }
-
-        function fallbackCopyTextToClipboard(text) {
-            var textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.position = "fixed"; textArea.style.opacity = "0";
-            document.body.appendChild(textArea); textArea.focus(); textArea.select();
-            try { document.execCommand('copy'); } catch (err) {}
-            document.body.removeChild(textArea);
-        }
-
-        function openROV() {
-            let btn = document.getElementById('actionBtn');
-            let icon = document.getElementById('btnIcon');
-            let text = document.getElementById('btnText');
-
-            btn.classList.add('success');
-            icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
-
+        setTimeout(() => {
+            // กำหนด URL ของ Garena (ลองใช้ ?code= เป็นค่าเริ่มต้น)
+            let garenaRedeemUrl = "https://redeem.rov.in.th/";
+            
             if (codeToRedeem) {
-                text.innerText = "คัดลอกแล้ว!";
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(codeToRedeem).then(function() {
-                        countViewAndJump();
-                    }).catch(function() {
-                        fallbackCopyTextToClipboard(codeToRedeem);
-                        countViewAndJump();
-                    });
-                } else {
+                // พ่วงโค้ดไปใน URL เพื่อให้หน้าเว็บ Garena ดึงไปกรอกอัตโนมัติ
+                garenaRedeemUrl = `https://redeem.rov.in.th/?code=${encodeURIComponent(codeToRedeem.trim())}`; 
+            }
+
+            // สร้าง Payload สำหรับสั่งเปิด Browser ภายในเกม RoV
+            let payload = { 
+                ContentUrl: "", 
+                actions: [
+                    { 
+                        name: "OpenUrlInGame", 
+                        Url: garenaRedeemUrl 
+                    }
+                ] 
+            };
+
+            // แปลง JSON เป็น String และทำการ Encode URI
+            let encodedPayload = encodeURIComponent(JSON.stringify(payload));
+            
+            // ใช้ Deeplink ของ RoV (ngame1138)
+            window.location.href = `ngame1138://deeplink?type=common&dest=${encodedPayload}`;
+        }, 300);
+    }
+
+    // ฟังก์ชันคัดลอกข้อความ (Fallback)
+    function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.position = "fixed"; textArea.style.opacity = "0";
+        document.body.appendChild(textArea); textArea.focus(); textArea.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(textArea);
+    }
+
+    // ฟังก์ชันหลักเมื่อกดปุ่มบนหน้าเว็บ
+    function openROV() {
+        let btn = document.getElementById('actionBtn');
+        let icon = document.getElementById('btnIcon');
+        let text = document.getElementById('btnText');
+
+        btn.classList.add('success');
+        icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+        if (codeToRedeem) {
+            text.innerText = "คัดลอกแล้ว!";
+            // คัดลอกลง Clipboard กันเหนียวไว้ก่อน
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(codeToRedeem).then(function() {
+                    countViewAndJump();
+                }).catch(function() {
                     fallbackCopyTextToClipboard(codeToRedeem);
                     countViewAndJump();
-                }
+                });
             } else {
-                text.innerText = "กำลังเข้าสู่เกม...";
-                countViewAndJump(); 
+                fallbackCopyTextToClipboard(codeToRedeem);
+                countViewAndJump();
+            }
+        } else {
+            text.innerText = "กำลังเข้าสู่เกม...";
+            countViewAndJump(); 
+        }
+    }
+
+    // ตรวจสอบอุปกรณ์และตั้งค่าหน้าจอเมื่อโหลดเสร็จ
+    window.onload = function() {
+        loadStats(); 
+
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const codeBox = document.getElementById('codeDisplay');
+        const mainTitle = document.getElementById('mainTitle');
+        const mainSubtitle = document.getElementById('mainSubtitle');
+
+        if (!isMobile) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('actionBtn').style.display = 'none';
+            codeBox.style.display = 'none';
+            mainTitle.innerText = "🚫 กรุณาเปิดลิงก์นี้บนมือถือ";
+            mainSubtitle.innerHTML = "ระบบเติมโค้ดอัตโนมัติรองรับเฉพาะ<br>สมาร์ทโฟนที่มีเกม RoV ติดตั้งอยู่เท่านั้นครับ";
+        } else {
+            if(codeToRedeem) {
+                mainTitle.innerText = "เตรียมเติมโค้ดเกม RoV!";
+                mainSubtitle.innerHTML = "ระบบจะพาคุณเข้าเกมและกรอกโค้ดให้อัตโนมัติ<br>หากไม่ขึ้น ให้กด \"วาง (Paste)\" ได้เลย!";
+                
+                codeBox.innerText = codeToRedeem.toUpperCase();
+                codeBox.style.display = 'block';
+                
+                document.getElementById('btnText').innerText = "แลกโค้ดและเข้าเกมทันที";
+                document.getElementById('btnIcon').innerHTML = '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line>';
             }
         }
-
-        window.onload = function() {
-            loadStats(); 
-
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            if (!isMobile) {
-                document.getElementById('spinner').style.display = 'none';
-                document.getElementById('actionBtn').style.display = 'none';
-                document.getElementById('codeDisplay').style.display = 'none';
-                document.getElementById('mainTitle').innerText = "🚫 กรุณาเปิดลิงก์นี้บนมือถือ";
-                document.getElementById('mainSubtitle').innerHTML = "ระบบเติมโค้ดอัตโนมัติรองรับเฉพาะ<br>สมาร์ทโฟนที่มีเกม RoV ติดตั้งอยู่เท่านั้นครับ";
-            } else {
-                if(codeToRedeem) {
-                    document.getElementById('mainTitle').innerText = "เตรียมเติมโค้ดเกม RoV!";
-                    document.getElementById('mainSubtitle').innerHTML = "ระบบจะก๊อปปี้โค้ดให้คุณอัตโนมัติ<br>เข้าเกมแล้วกด \"วาง (Paste)\" ได้เลย!";
-                    
-                    let codeBox = document.getElementById('codeDisplay');
-                    codeBox.innerText = codeToRedeem;
-                    codeBox.style.display = 'block';
-                    
-                    document.getElementById('btnText').innerText = "คัดลอกโค้ดและเข้าเกม";
-                    document.getElementById('btnIcon').innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
-                }
-            }
-        };
-    </script>
+    };
+</script>
 
 </body>
 </html>
